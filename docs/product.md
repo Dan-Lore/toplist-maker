@@ -81,7 +81,7 @@
 4. ~~MVP готов~~ → дуэли end-to-end
 5. ~~Стек~~ → Vite+ + Vue 3 + TS + Pinia + Vue Router + Dexie + Vitest
 6. ~~Алгоритм ранжирования~~ → Swiss-ish (как старый ToplistMaker) + Elo (K=24) для сравнения; модуль `src/domain/`
-7. ~~Картинки в MVP~~ → да (poster URL + placeholder fallback)
+7. ~~Картинки в MVP~~ → да: `imageUrl` + Shiki CDN/API + MAL/Jikan (`src/media/previews.ts`), fallback в карточке
 
 ## Стоимость: можно ли бесплатно
 
@@ -123,3 +123,5 @@
 | 2026-10-21 | Private MVP реализован локально: sample → duels → results (+ Dexie); `vp test` / E2E smoke OK           |
 | 2026-10-21 | Хостинг демо: GitHub Pages (`/toplist-maker/`), CI workflow на push в `main`                            |
 | 2026-10-21 | Локально: история списков/топов + JSON export/import (`list` / `ranking`); бэкенд — TODO                |
+| 2026-10-21 | Превью: Shikimori CDN/API + MAL через Jikan (`src/media/previews.ts`), fallback в карточке              |
+| 2026-10-21 | Тултип на пустом постере: понятный текст + `code=` (`previewIssue.ts`)                                  |

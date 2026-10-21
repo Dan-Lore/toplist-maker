@@ -11,6 +11,7 @@ Private MVP works locally:
 1. Load a sample list, import JSON, or reopen local history
 2. Run a duel tournament **or** open an already finished ranking
 3. Export list / ranking as portable JSON; history stays in IndexedDB (cloud later)
+4. Fetch posters from **Shikimori** and/or **MAL (Jikan)** — Auto tries Shiki first, then MAL
 
 ## Stack
 
@@ -40,6 +41,20 @@ vp build
 ## Sample data
 
 `public/samples/shiki-completed-seed.json` — 16 completed titles seeded from the old ToplistMaker Shiki export (for local MVP only).
+
+## Posters
+
+On setup, pick **Posters** provider and **Fetch posters**:
+
+| Provider  | Behavior                                                                       |
+| --------- | ------------------------------------------------------------------------------ |
+| Auto      | Shikimori CDN/GraphQL first; fill gaps via Jikan if `malId` is known           |
+| Shikimori | CDN preview/original + GraphQL/REST                                            |
+| MAL       | Jikan v4 images (`malId`, or discover via Shiki when only Shiki id is present) |
+
+Duel cards also try a static fallback chain (`imageUrl` → Shiki CDN) with `referrerpolicy="no-referrer"`.
+
+If a poster is missing, hover the placeholder for a short tip: plain-language reason + a `code=…` debug line (`no_ids`, `provider_needs_mal_id`, `cdn_all_failed`, …).
 
 ## Live demo
 

@@ -1,46 +1,87 @@
 <script setup lang="ts">
-import { ref, watch } from "vue";
+import { computed, ref, watch } from "vue";
 import type { Contender } from "../domain";
 import { displayTitle } from "../utils/display";
+import { diagnoseMissingPoster, formatPreviewIssueTooltip } from "../media/previewIssue";
+import { staticPreviewCandidates, type PreviewProvider } from "../media/previews";
+import PosterTip from "./PosterTip.vue";
 
-const props = defineProps<{
-  item: Contender;
-  shortcut?: string;
-  interactive?: boolean;
-}>();
+const props = withDefaults(
+  defineProps<{
+    item: Contender;
+    shortcut?: string;
+    interactive?: boolean;
+    provider?: PreviewProvider;
+  }>(),
+  { provider: "auto" },
+);
 
 defineEmits<{
   pick: [];
 }>();
 
-const imgFailed = ref(false);
+const candidateIndex = ref(0);
+const failedUrls = ref<string[]>([]);
+
+const candidates = computed(() => staticPreviewCandidates(props.item, props.provider));
+
+const currentSrc = computed(() => candidates.value[candidateIndex.value]);
 
 watch(
-  () => props.item.imageUrl,
+  () => [props.item.id, props.item.imageUrl, props.provider] as const,
   () => {
-    imgFailed.value = false;
+    candidateIndex.value = 0;
+    failedUrls.value = [];
   },
 );
 
 function onImgError(): void {
-  imgFailed.value = true;
+  const failed = currentSrc.value;
+  if (failed && !failedUrls.value.includes(failed)) {
+    failedUrls.value = [...failedUrls.value, failed];
+  }
+  if (candidateIndex.value + 1 < candidates.value.length) {
+    candidateIndex.value += 1;
+    return;
+  }
+  candidateIndex.value = candidates.value.length;
 }
+
+const showImage = computed(
+  () => Boolean(currentSrc.value) && candidateIndex.value < candidates.value.length,
+);
+
+const issue = computed(() => {
+  if (showImage.value) return null;
+  return diagnoseMissingPoster({
+    item: props.item,
+    provider: props.provider,
+    candidates: candidates.value,
+    failedUrls: failedUrls.value,
+  });
+});
+
+const nativeTitle = computed(() =>
+  issue.value ? formatPreviewIssueTooltip(issue.value) : undefined,
+);
 </script>
 
 <template>
   <button v-if="interactive" type="button" class="card card--interactive" @click="$emit('pick')">
     <span v-if="shortcut" class="card__key">{{ shortcut }}</span>
-    <div class="card__media">
+    <div class="card__media" :title="nativeTitle">
       <img
-        v-if="item.imageUrl && !imgFailed"
-        :src="item.imageUrl"
-        :alt="displayTitle(item)"
+        v-if="showImage"
+        :src="currentSrc"
+        alt=""
         loading="lazy"
+        referrerpolicy="no-referrer"
         @error="onImgError"
       />
       <div v-else class="card__placeholder" aria-hidden="true">
         <span>{{ displayTitle(item).slice(0, 1) }}</span>
       </div>
+      <PosterTip v-if="issue" :issue="issue" />
     </div>
     <div class="card__body">
       <strong class="card__title">{{ displayTitle(item) }}</strong>
@@ -52,17 +93,19 @@ function onImgError(): void {
   </button>
 
   <article v-else class="card">
-    <div class="card__media card__media--sm">
+    <div class="card__media card__media--sm" :title="nativeTitle">
       <img
-        v-if="item.imageUrl && !imgFailed"
-        :src="item.imageUrl"
-        :alt="displayTitle(item)"
+        v-if="showImage"
+        :src="currentSrc"
+        alt=""
         loading="lazy"
+        referrerpolicy="no-referrer"
         @error="onImgError"
       />
       <div v-else class="card__placeholder" aria-hidden="true">
         <span>{{ displayTitle(item).slice(0, 1) }}</span>
       </div>
+      <PosterTip v-if="issue" :issue="issue" />
     </div>
     <div class="card__body">
       <strong class="card__title">{{ displayTitle(item) }}</strong>

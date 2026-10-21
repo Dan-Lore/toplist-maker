@@ -12,6 +12,12 @@ export interface Contender {
   score?: number;
   status?: string;
   imageUrl?: string;
+  /** Catalog the numeric `id` belongs to when ambiguous. */
+  source?: "shiki" | "mal" | "unknown";
+  /** Shikimori anime id (when `id` is MAL or mixed). */
+  shikiId?: number;
+  /** MyAnimeList id (for Jikan posters / cross-links). */
+  malId?: number;
 }
 
 /** One pairwise duel awaiting a winner. */

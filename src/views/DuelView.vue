@@ -8,8 +8,15 @@ import type { ContenderId } from "../domain";
 
 const router = useRouter();
 const session = useSessionStore();
-const { currentPair, started, complete, progressLabel, progressPercent, hasItems } =
-  storeToRefs(session);
+const {
+  currentPair,
+  started,
+  complete,
+  progressLabel,
+  progressPercent,
+  hasItems,
+  previewProvider,
+} = storeToRefs(session);
 
 async function pick(id: ContenderId): Promise<void> {
   await session.recordWinner(id);
@@ -71,6 +78,7 @@ watch(complete, (done) => {
         :item="currentPair.a"
         shortcut="1"
         interactive
+        :provider="previewProvider"
         @pick="pick(currentPair.a.id)"
       />
       <p class="duel__vs" aria-hidden="true">vs</p>
@@ -78,6 +86,7 @@ watch(complete, (done) => {
         :item="currentPair.b"
         shortcut="2"
         interactive
+        :provider="previewProvider"
         @pick="pick(currentPair.b.id)"
       />
     </div>

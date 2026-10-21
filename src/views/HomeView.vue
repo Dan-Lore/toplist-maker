@@ -2,13 +2,27 @@
 import { onMounted, ref } from "vue";
 import { useRouter } from "vue-router";
 import { storeToRefs } from "pinia";
+import ProviderSelect from "../components/ProviderSelect.vue";
+import Thumb from "../components/Thumb.vue";
 import { useSessionStore } from "../stores/session";
 import { displayTitle } from "../utils/display";
+import type { PreviewProvider } from "../media/previews";
 
 const router = useRouter();
 const session = useSessionStore();
-const { items, loading, loadError, hasItems, seedMeta, sessionName, historyLists, historyResults } =
-  storeToRefs(session);
+const {
+  items,
+  loading,
+  loadError,
+  hasItems,
+  seedMeta,
+  sessionName,
+  historyLists,
+  historyResults,
+  previewProvider,
+  previewLoading,
+  previewProgress,
+} = storeToRefs(session);
 
 const fileInput = ref<HTMLInputElement | null>(null);
 
@@ -94,6 +108,26 @@ function formatWhen(ts: number): string {
       >
         Export list
       </button>
+      <label class="provider">
+        <span>Posters</span>
+        <ProviderSelect
+          :model-value="previewProvider"
+          :disabled="previewLoading"
+          @update:model-value="(v: PreviewProvider) => session.setPreviewProvider(v)"
+        />
+      </label>
+      <button
+        type="button"
+        class="btn btn--ghost"
+        :disabled="!items.length || previewLoading"
+        @click="session.enrichPreviews()"
+      >
+        {{
+          previewLoading && previewProgress
+            ? `Posters ${previewProgress.done}/${previewProgress.total}`
+            : "Fetch posters"
+        }}
+      </button>
       <button
         type="button"
         class="btn btn--primary"
@@ -121,6 +155,12 @@ function formatWhen(ts: number): string {
 
     <ul v-if="items.length" class="seed-list">
       <li v-for="item in items" :key="String(item.id)" class="seed-list__row">
+        <Thumb
+          :item="item"
+          :src="item.imageUrl"
+          :label="displayTitle(item)"
+          :provider="previewProvider"
+        />
         <span class="seed-list__title">{{ displayTitle(item) }}</span>
         <span v-if="item.score != null" class="seed-list__score">{{ item.score }}</span>
       </li>

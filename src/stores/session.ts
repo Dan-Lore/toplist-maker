@@ -30,6 +30,7 @@ import {
   slugifyFilename,
   type PortableDocument,
 } from "../io/portable";
+import { enrichContendersWithPreviews, type PreviewProvider } from "../media/previews";
 
 const SAMPLE_URL = "/samples/shiki-completed-seed.json";
 
@@ -65,6 +66,9 @@ export const useSessionStore = defineStore("session", () => {
 
   const historyLists = ref<SavedListRecord[]>([]);
   const historyResults = ref<SavedResultRecord[]>([]);
+  const previewProvider = ref<PreviewProvider>("auto");
+  const previewLoading = ref(false);
+  const previewProgress = ref<{ done: number; total: number } | null>(null);
 
   /** Domain tournament kept outside deep reactivity. */
   let tournament: Tournament | null = null;
@@ -118,23 +122,62 @@ export const useSessionStore = defineStore("session", () => {
     name: string,
     nextItems: Contender[],
     meta?: Record<string, unknown>,
-    options?: { persist?: boolean },
+    options?: { persist?: boolean; enrichPreviews?: boolean },
   ): Promise<void> {
-    items.value = nextItems;
+    const tagged = nextItems.map((item) => ({
+      ...item,
+      source: item.source ?? ("shiki" as const),
+    }));
+    items.value = tagged;
     sessionName.value = name;
     seedMeta.value = meta ?? null;
     resetTournament();
+    if (options?.enrichPreviews !== false) {
+      void enrichPreviews();
+    }
     if (options?.persist === false) {
       savedListId.value = undefined;
       return;
     }
     try {
-      savedListId.value = await saveList(name, nextItems, meta);
+      savedListId.value = await saveList(name, tagged, meta);
       await refreshHistory();
     } catch (persistErr) {
       console.warn("Could not persist list locally", persistErr);
       savedListId.value = undefined;
     }
+  }
+
+  async function enrichPreviews(): Promise<void> {
+    if (!items.value.length || previewLoading.value) return;
+    previewLoading.value = true;
+    previewProgress.value = { done: 0, total: items.value.length };
+    try {
+      const enriched = await enrichContendersWithPreviews(items.value, previewProvider.value, {
+        concurrency: 2,
+        onProgress: (done, total) => {
+          previewProgress.value = { done, total };
+        },
+      });
+      items.value = enriched;
+      // Keep open ranking posters in sync when viewing imported results
+      if (viewingImportedRanking.value && ranking.value.length) {
+        const byId = new Map(enriched.map((item) => [String(item.id), item]));
+        ranking.value = ranking.value.map((row) => {
+          const hit = byId.get(String(row.id));
+          return hit
+            ? { ...row, imageUrl: hit.imageUrl, malId: hit.malId, shikiId: hit.shikiId }
+            : row;
+        });
+      }
+    } finally {
+      previewLoading.value = false;
+      previewProgress.value = null;
+    }
+  }
+
+  function setPreviewProvider(provider: PreviewProvider): void {
+    previewProvider.value = provider;
   }
 
   async function loadSample(): Promise<void> {
@@ -216,6 +259,7 @@ export const useSessionStore = defineStore("session", () => {
     } catch (persistErr) {
       console.warn("Could not persist imported ranking", persistErr);
     }
+    void enrichPreviews();
     return doc;
   }
 
@@ -227,6 +271,7 @@ export const useSessionStore = defineStore("session", () => {
     seedMeta.value = row.meta ?? null;
     savedListId.value = row.id;
     resetTournament();
+    void enrichPreviews();
   }
 
   async function loadHistoryResult(id: number): Promise<"ranking" | "list"> {
@@ -234,14 +279,19 @@ export const useSessionStore = defineStore("session", () => {
     if (!row) throw new Error(`Result #${id} not found`);
     const nextItems =
       row.items ??
-      row.ranking.map(({ id: cid, title, titleRu, score, status, imageUrl }) => ({
-        id: cid,
-        title,
-        titleRu,
-        score,
-        status,
-        imageUrl,
-      }));
+      row.ranking.map(
+        ({ id: cid, title, titleRu, score, status, imageUrl, malId, shikiId, source }) => ({
+          id: cid,
+          title,
+          titleRu,
+          score,
+          status,
+          imageUrl,
+          malId,
+          shikiId,
+          source,
+        }),
+      );
     items.value = nextItems;
     sessionName.value = row.name;
     seedMeta.value = null;
@@ -251,6 +301,7 @@ export const useSessionStore = defineStore("session", () => {
     complete.value = true;
     viewingImportedRanking.value = true;
     lastResultId.value = row.id;
+    void enrichPreviews();
     return "ranking";
   }
 
@@ -303,6 +354,9 @@ export const useSessionStore = defineStore("session", () => {
     viewingImportedRanking,
     historyLists,
     historyResults,
+    previewProvider,
+    previewLoading,
+    previewProgress,
     itemCount,
     hasItems,
     hasRanking,
@@ -320,5 +374,7 @@ export const useSessionStore = defineStore("session", () => {
     exportCurrentRanking,
     removeHistoryList,
     removeHistoryResult,
+    enrichPreviews,
+    setPreviewProvider,
   };
 });

@@ -2,13 +2,21 @@
 import { onMounted } from "vue";
 import { useRouter } from "vue-router";
 import { storeToRefs } from "pinia";
+import Thumb from "../components/Thumb.vue";
 import { useSessionStore } from "../stores/session";
 import { displayTitle } from "../utils/display";
 
 const router = useRouter();
 const session = useSessionStore();
-const { ranking, complete, started, lastResultId, viewingImportedRanking, hasItems } =
-  storeToRefs(session);
+const {
+  ranking,
+  complete,
+  started,
+  lastResultId,
+  viewingImportedRanking,
+  hasItems,
+  previewProvider,
+} = storeToRefs(session);
 
 onMounted(() => {
   if (!started.value && ranking.value.length === 0) {
@@ -70,6 +78,12 @@ function onExportList(): void {
     <ol v-if="ranking.length" class="rank-list">
       <li v-for="row in ranking" :key="String(row.id)" class="rank-list__row">
         <span class="rank-list__rank">{{ row.rank }}</span>
+        <Thumb
+          :item="row"
+          :src="row.imageUrl"
+          :label="displayTitle(row)"
+          :provider="previewProvider"
+        />
         <div class="rank-list__main">
           <strong>{{ displayTitle(row) }}</strong>
           <span v-if="row.titleRu && row.title !== row.titleRu" class="rank-list__sub">

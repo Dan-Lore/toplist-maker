@@ -128,13 +128,16 @@ export function slugifyFilename(name: string): string {
 }
 
 function rankingToItems(ranking: RankedContender[]): Contender[] {
-  return ranking.map(({ id, title, titleRu, score, status, imageUrl }) => ({
+  return ranking.map(({ id, title, titleRu, score, status, imageUrl, source, shikiId, malId }) => ({
     id,
     title,
     titleRu,
     score,
     status,
     imageUrl,
+    source,
+    shikiId,
+    malId,
   }));
 }
 
@@ -151,6 +154,10 @@ function normalizeItems(raw: unknown): Contender[] {
     if (typeof item.title !== "string" || !item.title.trim()) {
       throw new Error(`items[${index}] missing title`);
     }
+    const source =
+      item.source === "shiki" || item.source === "mal" || item.source === "unknown"
+        ? item.source
+        : undefined;
     return {
       id: item.id as Contender["id"],
       title: item.title.trim(),
@@ -158,6 +165,9 @@ function normalizeItems(raw: unknown): Contender[] {
       score: typeof item.score === "number" ? item.score : undefined,
       status: typeof item.status === "string" ? item.status : undefined,
       imageUrl: typeof item.imageUrl === "string" ? item.imageUrl : undefined,
+      source,
+      shikiId: typeof item.shikiId === "number" ? item.shikiId : undefined,
+      malId: typeof item.malId === "number" ? item.malId : undefined,
     };
   });
 }
