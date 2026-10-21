@@ -8,9 +8,9 @@ Public portfolio project. Product notes: [`docs/product.md`](docs/product.md).
 
 Private MVP works locally:
 
-1. Load sample list (Shikimori-style JSON seed)
-2. Run duel tournament
-3. See ranking (saved in IndexedDB via Dexie)
+1. Load a sample list, import JSON, or reopen local history
+2. Run a duel tournament **or** open an already finished ranking
+3. Export list / ranking as portable JSON; history stays in IndexedDB (cloud later)
 
 ## Stack
 

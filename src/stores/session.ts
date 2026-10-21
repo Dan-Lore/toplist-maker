@@ -10,7 +10,26 @@ import {
   type Tournament,
   type TournamentProgress,
 } from "../domain";
-import { saveList, saveResult } from "../db";
+import {
+  deleteSavedList,
+  deleteSavedResult,
+  getSavedList,
+  getSavedResult,
+  listSavedLists,
+  listSavedResults,
+  saveList,
+  saveResult,
+  type SavedListRecord,
+  type SavedResultRecord,
+} from "../db";
+import {
+  buildListDocument,
+  buildRankingDocument,
+  downloadJson,
+  parsePortable,
+  slugifyFilename,
+  type PortableDocument,
+} from "../io/portable";
 
 const SAMPLE_URL = "/samples/shiki-completed-seed.json";
 
@@ -29,6 +48,7 @@ const emptyProgress = (): TournamentProgress => ({
 
 export const useSessionStore = defineStore("session", () => {
   const items = ref<Contender[]>([]);
+  const sessionName = ref("Untitled list");
   const seedMeta = ref<Record<string, unknown> | null>(null);
   const savedListId = ref<number | undefined>();
   const loadError = ref<string | null>(null);
@@ -40,12 +60,18 @@ export const useSessionStore = defineStore("session", () => {
   const complete = ref(false);
   const started = ref(false);
   const lastResultId = ref<number | undefined>();
+  /** True when user opened a finished ranking without starting a new duel. */
+  const viewingImportedRanking = ref(false);
+
+  const historyLists = ref<SavedListRecord[]>([]);
+  const historyResults = ref<SavedResultRecord[]>([]);
 
   /** Domain tournament kept outside deep reactivity. */
   let tournament: Tournament | null = null;
 
   const itemCount = computed(() => items.value.length);
   const hasItems = computed(() => items.value.length >= 2);
+  const hasRanking = computed(() => ranking.value.length > 0);
   const progressLabel = computed(() => {
     const p = progress.value;
     if (!started.value || p.pairsTotal <= 0) return "";
@@ -71,6 +97,46 @@ export const useSessionStore = defineStore("session", () => {
     complete.value = tournament.isComplete();
   }
 
+  function resetTournament(): void {
+    tournament = null;
+    started.value = false;
+    complete.value = false;
+    currentPair.value = null;
+    progress.value = emptyProgress();
+    ranking.value = [];
+    lastResultId.value = undefined;
+    viewingImportedRanking.value = false;
+  }
+
+  async function refreshHistory(): Promise<void> {
+    const [lists, results] = await Promise.all([listSavedLists(), listSavedResults()]);
+    historyLists.value = lists;
+    historyResults.value = results;
+  }
+
+  async function applyList(
+    name: string,
+    nextItems: Contender[],
+    meta?: Record<string, unknown>,
+    options?: { persist?: boolean },
+  ): Promise<void> {
+    items.value = nextItems;
+    sessionName.value = name;
+    seedMeta.value = meta ?? null;
+    resetTournament();
+    if (options?.persist === false) {
+      savedListId.value = undefined;
+      return;
+    }
+    try {
+      savedListId.value = await saveList(name, nextItems, meta);
+      await refreshHistory();
+    } catch (persistErr) {
+      console.warn("Could not persist list locally", persistErr);
+      savedListId.value = undefined;
+    }
+  }
+
   async function loadSample(): Promise<void> {
     loading.value = true;
     loadError.value = null;
@@ -81,15 +147,7 @@ export const useSessionStore = defineStore("session", () => {
       }
       const data = (await res.json()) as SeedFile;
       const selected = selectTopCompleted(data.items);
-      items.value = selected;
-      seedMeta.value = data.meta ?? null;
-      try {
-        savedListId.value = await saveList("Shiki completed seed", selected, data.meta);
-      } catch (persistErr) {
-        console.warn("Could not persist list locally", persistErr);
-        savedListId.value = undefined;
-      }
-      resetTournament();
+      await applyList("Shiki completed seed", selected, data.meta);
     } catch (err) {
       loadError.value = err instanceof Error ? err.message : String(err);
       items.value = [];
@@ -99,22 +157,13 @@ export const useSessionStore = defineStore("session", () => {
     }
   }
 
-  function resetTournament(): void {
-    tournament = null;
-    started.value = false;
-    complete.value = false;
-    currentPair.value = null;
-    progress.value = emptyProgress();
-    ranking.value = [];
-    lastResultId.value = undefined;
-  }
-
   function startTournament(): boolean {
     if (items.value.length < 2) {
       loadError.value = "Need at least 2 items to start a tournament";
       return false;
     }
     loadError.value = null;
+    viewingImportedRanking.value = false;
     tournament = createTournament(items.value, { seedBy: "score" });
     started.value = true;
     syncFromTournament();
@@ -128,10 +177,11 @@ export const useSessionStore = defineStore("session", () => {
     if (complete.value) {
       try {
         lastResultId.value = await saveResult(
-          `Result ${new Date().toLocaleString()}`,
+          `${sessionName.value} · ${new Date().toLocaleString()}`,
           ranking.value,
-          savedListId.value,
+          { sourceListId: savedListId.value, items: items.value },
         );
+        await refreshHistory();
       } catch (persistErr) {
         console.warn("Could not persist result locally", persistErr);
         lastResultId.value = undefined;
@@ -140,8 +190,106 @@ export const useSessionStore = defineStore("session", () => {
     return true;
   }
 
+  async function importPortableJson(raw: unknown): Promise<PortableDocument> {
+    const doc = parsePortable(raw);
+    loadError.value = null;
+    if (doc.kind === "list") {
+      await applyList(doc.name, doc.items ?? [], doc.meta);
+      return doc;
+    }
+    const nextItems = doc.items ?? [];
+    items.value = nextItems;
+    sessionName.value = doc.name;
+    seedMeta.value = doc.meta ?? null;
+    resetTournament();
+    ranking.value = doc.ranking ?? [];
+    complete.value = true;
+    viewingImportedRanking.value = true;
+    try {
+      savedListId.value =
+        nextItems.length > 0 ? await saveList(doc.name, nextItems, doc.meta) : undefined;
+      lastResultId.value = await saveResult(doc.name, ranking.value, {
+        sourceListId: savedListId.value,
+        items: nextItems,
+      });
+      await refreshHistory();
+    } catch (persistErr) {
+      console.warn("Could not persist imported ranking", persistErr);
+    }
+    return doc;
+  }
+
+  async function loadHistoryList(id: number): Promise<void> {
+    const row = await getSavedList(id);
+    if (!row) throw new Error(`List #${id} not found`);
+    items.value = row.items;
+    sessionName.value = row.name;
+    seedMeta.value = row.meta ?? null;
+    savedListId.value = row.id;
+    resetTournament();
+  }
+
+  async function loadHistoryResult(id: number): Promise<"ranking" | "list"> {
+    const row = await getSavedResult(id);
+    if (!row) throw new Error(`Result #${id} not found`);
+    const nextItems =
+      row.items ??
+      row.ranking.map(({ id: cid, title, titleRu, score, status, imageUrl }) => ({
+        id: cid,
+        title,
+        titleRu,
+        score,
+        status,
+        imageUrl,
+      }));
+    items.value = nextItems;
+    sessionName.value = row.name;
+    seedMeta.value = null;
+    savedListId.value = row.sourceListId;
+    resetTournament();
+    ranking.value = row.ranking;
+    complete.value = true;
+    viewingImportedRanking.value = true;
+    lastResultId.value = row.id;
+    return "ranking";
+  }
+
+  function exportCurrentList(): void {
+    if (!items.value.length) {
+      loadError.value = "Nothing to export";
+      return;
+    }
+    const doc = buildListDocument(sessionName.value, items.value, seedMeta.value ?? undefined);
+    downloadJson(`${slugifyFilename(sessionName.value)}-list.json`, doc);
+  }
+
+  function exportCurrentRanking(): void {
+    if (!ranking.value.length) {
+      loadError.value = "No ranking to export";
+      return;
+    }
+    const doc = buildRankingDocument(
+      sessionName.value,
+      ranking.value,
+      items.value,
+      seedMeta.value ?? undefined,
+    );
+    downloadJson(`${slugifyFilename(sessionName.value)}-ranking.json`, doc);
+  }
+
+  async function removeHistoryList(id: number): Promise<void> {
+    await deleteSavedList(id);
+    await refreshHistory();
+  }
+
+  async function removeHistoryResult(id: number): Promise<void> {
+    await deleteSavedResult(id);
+    await refreshHistory();
+  }
+
   return {
     items,
+    sessionName,
     seedMeta,
     savedListId,
     loadError,
@@ -152,13 +300,25 @@ export const useSessionStore = defineStore("session", () => {
     complete,
     started,
     lastResultId,
+    viewingImportedRanking,
+    historyLists,
+    historyResults,
     itemCount,
     hasItems,
+    hasRanking,
     progressLabel,
     progressPercent,
     loadSample,
     startTournament,
     recordWinner,
     resetTournament,
+    refreshHistory,
+    importPortableJson,
+    loadHistoryList,
+    loadHistoryResult,
+    exportCurrentList,
+    exportCurrentRanking,
+    removeHistoryList,
+    removeHistoryResult,
   };
 });

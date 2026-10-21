@@ -16,6 +16,8 @@ export interface SavedResultRecord {
   name: string;
   createdAt: number;
   ranking: RankedContender[];
+  /** Contenders used for the run (so a ranking can be replayed). */
+  items?: Contender[];
   sourceListId?: number;
 }
 
@@ -56,18 +58,39 @@ export async function saveList(
 export async function saveResult(
   name: string,
   ranking: RankedContender[],
-  sourceListId?: number,
+  options?: { sourceListId?: number; items?: Contender[] },
 ): Promise<number> {
   const id = await db.results.add({
     name,
     createdAt: Date.now(),
     ranking: cloneJson(ranking),
-    sourceListId,
+    items: options?.items ? cloneJson(options.items) : undefined,
+    sourceListId: options?.sourceListId,
   });
   if (id === undefined) throw new Error("Failed to save result");
   return id;
 }
 
+export async function listSavedLists(): Promise<SavedListRecord[]> {
+  return db.lists.orderBy("createdAt").reverse().toArray();
+}
+
 export async function listSavedResults(): Promise<SavedResultRecord[]> {
   return db.results.orderBy("createdAt").reverse().toArray();
+}
+
+export async function getSavedList(id: number): Promise<SavedListRecord | undefined> {
+  return db.lists.get(id);
+}
+
+export async function getSavedResult(id: number): Promise<SavedResultRecord | undefined> {
+  return db.results.get(id);
+}
+
+export async function deleteSavedList(id: number): Promise<void> {
+  await db.lists.delete(id);
+}
+
+export async function deleteSavedResult(id: number): Promise<void> {
+  await db.results.delete(id);
 }

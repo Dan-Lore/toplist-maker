@@ -7,7 +7,8 @@ import { displayTitle } from "../utils/display";
 
 const router = useRouter();
 const session = useSessionStore();
-const { ranking, complete, started, lastResultId } = storeToRefs(session);
+const { ranking, complete, started, lastResultId, viewingImportedRanking, hasItems } =
+  storeToRefs(session);
 
 onMounted(() => {
   if (!started.value && ranking.value.length === 0) {
@@ -24,6 +25,14 @@ function onReplay(): void {
   if (!session.startTournament()) return;
   void router.push({ name: "duel" });
 }
+
+function onExportRanking(): void {
+  session.exportCurrentRanking();
+}
+
+function onExportList(): void {
+  session.exportCurrentList();
+}
 </script>
 
 <template>
@@ -32,14 +41,30 @@ function onReplay(): void {
       <RouterLink class="back-link" :to="{ name: 'home' }">← Setup</RouterLink>
       <h1 class="brand brand--sm">Your ranking</h1>
       <p class="lede">
-        {{ complete ? "Tournament complete." : "Live standings so far." }}
+        <template v-if="viewingImportedRanking">Imported / history ranking.</template>
+        <template v-else>
+          {{ complete ? "Tournament complete." : "Live standings so far." }}
+        </template>
         <span v-if="lastResultId != null"> Saved locally (#{{ lastResultId }}).</span>
       </p>
     </header>
 
     <div class="toolbar">
       <button type="button" class="btn btn--ghost" @click="onAgain">Back to setup</button>
-      <button type="button" class="btn btn--primary" @click="onReplay">Run again</button>
+      <button
+        type="button"
+        class="btn btn--ghost"
+        :disabled="!ranking.length"
+        @click="onExportRanking"
+      >
+        Export ranking
+      </button>
+      <button type="button" class="btn btn--ghost" :disabled="!hasItems" @click="onExportList">
+        Export list
+      </button>
+      <button type="button" class="btn btn--primary" :disabled="!hasItems" @click="onReplay">
+        Run again
+      </button>
     </div>
 
     <ol v-if="ranking.length" class="rank-list">
