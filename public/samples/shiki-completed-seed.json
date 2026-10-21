@@ -1,0 +1,153 @@
+{
+  "meta": {
+    "source": "Dan-Lore/projects ToplistMaker Shiki",
+    "completedTotal": 1590,
+    "seedSize": 16
+  },
+  "items": [
+    {
+      "id": 31043,
+      "title": "Boku dake ga Inai Machi",
+      "titleRu": "Город, в котором меня нет",
+      "score": 10,
+      "status": "completed",
+      "episodes": 12,
+      "imageUrl": "https://shikimori.one/system/animes/original/31043.jpg"
+    },
+    {
+      "id": 15417,
+      "title": "Gintama': Enchousen",
+      "titleRu": "Гинтама 3",
+      "score": 10,
+      "status": "completed",
+      "episodes": 13,
+      "imageUrl": "https://shikimori.one/system/animes/original/15417.jpg"
+    },
+    {
+      "id": 10408,
+      "title": "Hotarubi no Mori e",
+      "titleRu": "В лес, где мерцают светлячки",
+      "score": 10,
+      "status": "completed",
+      "episodes": 1,
+      "imageUrl": "https://shikimori.one/system/animes/original/10408.jpg"
+    },
+    {
+      "id": 35557,
+      "title": "Houseki no Kuni",
+      "titleRu": "Страна самоцветов",
+      "score": 10,
+      "status": "completed",
+      "episodes": 12,
+      "imageUrl": "https://shikimori.one/system/animes/original/35557.jpg"
+    },
+    {
+      "id": 28851,
+      "title": "Koe no Katachi",
+      "titleRu": "Форма голоса",
+      "score": 10,
+      "status": "completed",
+      "episodes": 1,
+      "imageUrl": "https://shikimori.one/system/animes/original/28851.jpg"
+    },
+    {
+      "id": 12477,
+      "title": "Sakasama no Patema",
+      "titleRu": "Патэма наоборот",
+      "score": 10,
+      "status": "completed",
+      "episodes": 1,
+      "imageUrl": "https://shikimori.one/system/animes/original/12477.jpg"
+    },
+    {
+      "id": 35851,
+      "title": "Sayonara no Asa ni Yakusoku no Hana wo Kazarou",
+      "titleRu": "Укрась прощальное утро цветами обещания",
+      "score": 10,
+      "status": "completed",
+      "episodes": 1,
+      "imageUrl": "https://shikimori.one/system/animes/original/35851.jpg"
+    },
+    {
+      "id": 34240,
+      "title": "Shelter (Music)",
+      "titleRu": "Убежище",
+      "score": 10,
+      "status": "completed",
+      "episodes": 1,
+      "imageUrl": "https://shikimori.one/system/animes/original/34240.jpg"
+    },
+    {
+      "id": 52991,
+      "title": "Sousou no Frieren",
+      "titleRu": "Провожающая в последний путь Фрирен",
+      "score": 10,
+      "status": "completed",
+      "episodes": 28,
+      "imageUrl": "https://shikimori.one/system/animes/original/52991.jpg"
+    },
+    {
+      "id": 7311,
+      "title": "Suzumiya Haruhi no Shoushitsu",
+      "titleRu": "Исчезновение Харухи Судзумии",
+      "score": 10,
+      "status": "completed",
+      "episodes": 1,
+      "imageUrl": "https://shikimori.one/system/animes/original/7311.jpg"
+    },
+    {
+      "id": 4224,
+      "title": "Toradora!",
+      "titleRu": "Торадора!",
+      "score": 10,
+      "status": "completed",
+      "episodes": 25,
+      "imageUrl": "https://shikimori.one/system/animes/original/4224.jpg"
+    },
+    {
+      "id": 52034,
+      "title": "\"Oshi no Ko\"",
+      "titleRu": "Ребёнок идола",
+      "score": 9,
+      "status": "completed",
+      "episodes": 11,
+      "imageUrl": "https://shikimori.one/system/animes/original/52034.jpg"
+    },
+    {
+      "id": 41457,
+      "title": "86",
+      "titleRu": "Восемьдесят шесть",
+      "score": 9,
+      "status": "completed",
+      "episodes": 11,
+      "imageUrl": "https://shikimori.one/system/animes/original/41457.jpg"
+    },
+    {
+      "id": 6547,
+      "title": "Angel Beats!",
+      "titleRu": "Ангельские ритмы!",
+      "score": 9,
+      "status": "completed",
+      "episodes": 13,
+      "imageUrl": "https://shikimori.one/system/animes/original/6547.jpg"
+    },
+    {
+      "id": 9989,
+      "title": "Ano Hi Mita Hana no Namae wo Bokutachi wa Mada Shiranai.",
+      "titleRu": "Невиданный цветок",
+      "score": 9,
+      "status": "completed",
+      "episodes": 11,
+      "imageUrl": "https://shikimori.one/system/animes/original/9989.jpg"
+    },
+    {
+      "id": 269,
+      "title": "Bleach",
+      "titleRu": "Блич",
+      "score": 9,
+      "status": "completed",
+      "episodes": 366,
+      "imageUrl": "https://shikimori.one/system/animes/original/269.jpg"
+    }
+  ]
+}

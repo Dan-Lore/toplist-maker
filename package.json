@@ -1,0 +1,31 @@
+{
+  "name": "toplist-maker",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vp dev",
+    "build": "vp build",
+    "preview": "vp preview",
+    "test": "vp test",
+    "check": "vp check"
+  },
+  "dependencies": {
+    "@vue/devtools-api": "^8.2.1",
+    "dexie": "^4.4.6",
+    "pinia": "^4.1.0",
+    "vue": "^3.5.44",
+    "vue-router": "^5.4.0"
+  },
+  "devDependencies": {
+    "@types/node": "^24.19.2",
+    "@vitejs/plugin-vue": "^6.0.10",
+    "@vue/tsconfig": "^0.9.1",
+    "playwright": "1.56.1",
+    "typescript": "~5.9.3",
+    "vite": "catalog:",
+    "vite-plus": "catalog:",
+    "vue-tsc": "^3.3.13"
+  },
+  "packageManager": "pnpm@12.14.0"
+}
