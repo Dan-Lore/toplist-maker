@@ -40,3 +40,9 @@ vp build
 ## Sample data
 
 `public/samples/shiki-completed-seed.json` — 16 completed titles seeded from the old ToplistMaker Shiki export (for local MVP only).
+
+## Live demo
+
+GitHub Pages: https://dan-lore.github.io/toplist-maker/
+
+Deploys automatically from `main` via `.github/workflows/deploy-pages.yml`.

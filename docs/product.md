@@ -123,3 +123,4 @@
 | 2026-10-21 | Публичный репо в первую очередь как портфолио                                                           |
 | 2026-10-21 | Ранжирование: Swiss-ish win/lose (`src/domain/tournament.ts`) + Elo K=24 (`src/domain/elo.ts`)          |
 | 2026-10-21 | Private MVP реализован локально: sample → duels → results (+ Dexie); `vp test` / E2E smoke OK           |
+| 2026-10-21 | Хостинг демо: GitHub Pages (`/toplist-maker/`), CI workflow на push в `main`                            |
