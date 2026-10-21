@@ -127,3 +127,4 @@
 | 2026-10-21 | Тултип на пустом постере: понятный текст + `code=` (`previewIssue.ts`)                                  |
 | 2026-10-21 | Shikimori host: `shikimori.io` (`.one` недоступен / РКН); legacy URL переписываются                     |
 | 2026-10-21 | Импорт: Shikimori user-rates JSON-массив (`target_id` / `target_title`) → list                          |
+| 2026-10-22 | Импорт по ссылке профиля Shikimori (`/api/users/:nick/anime_rates`)                                     |

@@ -8,7 +8,7 @@ Public portfolio project. Product notes: [`docs/product.md`](docs/product.md).
 
 Private MVP works locally:
 
-1. Load a sample list, import JSON, or reopen local history
+1. Load a sample, **Shikimori profile URL**, JSON import, or local history
 2. Run a duel tournament **or** open an already finished ranking
 3. Export list / ranking as portable JSON; history stays in IndexedDB (cloud later)
 4. Fetch posters from **Shikimori** and/or **MAL (Jikan)** — Auto tries Shiki first, then MAL
@@ -43,6 +43,8 @@ vp build
 `public/samples/shiki-completed-seed.json` — 16 completed titles seeded from the old ToplistMaker Shiki export (for local MVP only).
 
 **Import JSON** also accepts a Shikimori user-rates export (bare array like `Dan_Lore_animes.json`: `target_id`, `target_title`, `score`, `status`, …). Anime rows become a list with Shiki ids and `shikimori.io` poster URLs.
+
+**Load from Shiki** accepts a profile URL or nickname (e.g. `https://shikimori.io/Dan_Lore`) and pulls anime rates via the public API (default filter: completed).
 
 ## Posters
 

@@ -2,11 +2,23 @@
 import { onMounted, ref } from "vue";
 import { useRouter } from "vue-router";
 import { storeToRefs } from "pinia";
+import PillSelect from "../components/PillSelect.vue";
 import ProviderSelect from "../components/ProviderSelect.vue";
 import Thumb from "../components/Thumb.vue";
 import { useSessionStore } from "../stores/session";
 import { displayTitle } from "../utils/display";
 import type { PreviewProvider } from "../media/previews";
+import type { ShikiListStatus } from "../io/shikiProfile";
+
+const statusOptions: { value: ShikiListStatus; label: string }[] = [
+  { value: "completed", label: "Completed" },
+  { value: "watching", label: "Watching" },
+  { value: "planned", label: "Planned" },
+  { value: "on_hold", label: "On hold" },
+  { value: "dropped", label: "Dropped" },
+  { value: "rewatching", label: "Rewatching" },
+  { value: "all", label: "All" },
+];
 
 const router = useRouter();
 const session = useSessionStore();
@@ -22,9 +34,13 @@ const {
   previewProvider,
   previewLoading,
   previewProgress,
+  profileLoading,
+  profileProgress,
 } = storeToRefs(session);
 
 const fileInput = ref<HTMLInputElement | null>(null);
+const profileInput = ref("");
+const profileStatus = ref<ShikiListStatus>("completed");
 
 onMounted(async () => {
   await session.refreshHistory();
@@ -35,6 +51,10 @@ onMounted(async () => {
 
 async function onReload(): Promise<void> {
   await session.loadSample();
+}
+
+async function onLoadProfile(): Promise<void> {
+  await session.loadShikiProfile(profileInput.value, profileStatus.value);
 }
 
 function onStart(): void {
@@ -88,14 +108,55 @@ function formatWhen(ts: number): string {
       <p class="eyebrow">Private MVP</p>
       <h1 class="brand">Toplist Maker</h1>
       <p class="lede">
-        Load a list (sample, portable JSON, Shikimori export, or history), run pairwise duels, or
+        Load a list (sample, Shikimori profile URL, JSON export, or history), run pairwise duels, or
         open an already finished ranking. Everything stays in this browser for now.
       </p>
     </header>
 
+    <div class="profile-block">
+      <div class="profile-row">
+        <label class="profile-row__field">
+          <span>Shikimori profile</span>
+          <input
+            v-model="profileInput"
+            type="text"
+            inputmode="url"
+            autocomplete="off"
+            spellcheck="false"
+            placeholder="https://shikimori.io/Dan_Lore"
+            :disabled="profileLoading"
+            @keydown.enter.prevent="onLoadProfile"
+          />
+        </label>
+        <label class="profile-row__field profile-row__field--status">
+          <span>Status</span>
+          <PillSelect
+            v-model="profileStatus"
+            :options="statusOptions"
+            :disabled="profileLoading"
+            aria-label="List status filter"
+          />
+        </label>
+        <button
+          type="button"
+          class="btn btn--primary"
+          :disabled="profileLoading || !profileInput.trim()"
+          @click="onLoadProfile"
+        >
+          {{ profileLoading ? "Loading…" : "Load from Shiki" }}
+        </button>
+      </div>
+      <p v-if="profileLoading && profileProgress" class="profile-status" aria-live="polite">
+        {{ profileProgress.phase }}
+        <template v-if="profileProgress.loaded > 0">
+          · {{ profileProgress.loaded }} items
+        </template>
+      </p>
+    </div>
+
     <div class="toolbar">
       <button type="button" class="btn btn--ghost" :disabled="loading" @click="onReload">
-        {{ loading ? "Loading…" : "Reload sample" }}
+        {{ loading && !profileLoading ? "Loading…" : "Reload sample" }}
       </button>
       <button type="button" class="btn btn--ghost" :disabled="loading" @click="onPickFile">
         Import JSON

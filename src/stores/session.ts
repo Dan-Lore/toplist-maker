@@ -30,6 +30,7 @@ import {
   slugifyFilename,
   type PortableDocument,
 } from "../io/portable";
+import { fetchShikiProfileList, type ShikiListStatus } from "../io/shikiProfile";
 import { enrichContendersWithPreviews, type PreviewProvider } from "../media/previews";
 
 const SAMPLE_URL = `${import.meta.env.BASE_URL}samples/shiki-completed-seed.json`;
@@ -69,6 +70,8 @@ export const useSessionStore = defineStore("session", () => {
   const previewProvider = ref<PreviewProvider>("auto");
   const previewLoading = ref(false);
   const previewProgress = ref<{ done: number; total: number } | null>(null);
+  const profileLoading = ref(false);
+  const profileProgress = ref<{ phase: string; loaded: number; page: number } | null>(null);
 
   /** Domain tournament kept outside deep reactivity. */
   let tournament: Tournament | null = null;
@@ -178,6 +181,36 @@ export const useSessionStore = defineStore("session", () => {
 
   function setPreviewProvider(provider: PreviewProvider): void {
     previewProvider.value = provider;
+  }
+
+  async function loadShikiProfile(
+    input: string,
+    status: ShikiListStatus = "completed",
+  ): Promise<void> {
+    profileLoading.value = true;
+    loading.value = true;
+    loadError.value = null;
+    profileProgress.value = { phase: "Starting…", loaded: 0, page: 0 };
+    try {
+      const doc = await fetchShikiProfileList(input, {
+        status,
+        onProgress: (info) => {
+          profileProgress.value = info;
+        },
+      });
+      profileProgress.value = {
+        phase: `Saving ${doc.items?.length ?? 0} titles…`,
+        loaded: doc.items?.length ?? 0,
+        page: 0,
+      };
+      await applyList(doc.name, doc.items ?? [], doc.meta, { enrichPreviews: false });
+    } catch (err) {
+      loadError.value = err instanceof Error ? err.message : String(err);
+    } finally {
+      profileLoading.value = false;
+      profileProgress.value = null;
+      loading.value = false;
+    }
   }
 
   async function loadSample(options?: { quiet?: boolean }): Promise<void> {
@@ -363,12 +396,15 @@ export const useSessionStore = defineStore("session", () => {
     previewProvider,
     previewLoading,
     previewProgress,
+    profileLoading,
+    profileProgress,
     itemCount,
     hasItems,
     hasRanking,
     progressLabel,
     progressPercent,
     loadSample,
+    loadShikiProfile,
     startTournament,
     recordWinner,
     resetTournament,
