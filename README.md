@@ -42,6 +42,8 @@ vp build
 
 `public/samples/shiki-completed-seed.json` — 16 completed titles seeded from the old ToplistMaker Shiki export (for local MVP only).
 
+**Import JSON** also accepts a Shikimori user-rates export (bare array like `Dan_Lore_animes.json`: `target_id`, `target_title`, `score`, `status`, …). Anime rows become a list with Shiki ids and `shikimori.io` poster URLs.
+
 ## Posters
 
 On setup, pick **Posters** provider and **Fetch posters**:

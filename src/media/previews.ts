@@ -194,6 +194,12 @@ export async function resolvePreviewUrl(
   const tryShiki = provider === "auto" || provider === "shiki";
   const tryMal = provider === "auto" || provider === "mal";
 
+  // Already have a usable URL — skip API chatter (important for large Shiki exports)
+  if (imageUrl && provider !== "mal") {
+    resolvedCache.set(key, imageUrl);
+    return { imageUrl, malId, shikiId };
+  }
+
   // Shiki: posters + optional malId discovery (also when provider=mal but malId unknown)
   if (shikiId != null && (tryShiki || (tryMal && malId == null))) {
     try {

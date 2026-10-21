@@ -126,3 +126,4 @@
 | 2026-10-21 | Превью: Shikimori CDN/API + MAL через Jikan (`src/media/previews.ts`), fallback в карточке              |
 | 2026-10-21 | Тултип на пустом постере: понятный текст + `code=` (`previewIssue.ts`)                                  |
 | 2026-10-21 | Shikimori host: `shikimori.io` (`.one` недоступен / РКН); legacy URL переписываются                     |
+| 2026-10-21 | Импорт: Shikimori user-rates JSON-массив (`target_id` / `target_title`) → list                          |

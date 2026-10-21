@@ -58,4 +58,20 @@ describe("portable io", () => {
       /Unknown format/,
     );
   });
+
+  it("accepts Shikimori user-rates array export", () => {
+    const parsed = parsePortable([
+      {
+        target_title: "Naruto",
+        target_title_ru: "Наруто",
+        target_id: 20,
+        target_type: "Anime",
+        score: 9,
+        status: "completed",
+      },
+    ]);
+    expect(parsed.kind).toBe("list");
+    expect(parsed.items?.[0]?.shikiId).toBe(20);
+    expect(parsed.meta?.source).toBe("shikimori-user-rates");
+  });
 });

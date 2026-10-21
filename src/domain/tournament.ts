@@ -293,12 +293,15 @@ export function selectTopCompleted(
       return compareIds(a.id, b.id);
     })
     .slice(0, Math.max(0, limit))
-    .map(({ id, title, titleRu, score, status, imageUrl }) => ({
+    .map(({ id, title, titleRu, score, status, imageUrl, source, shikiId, malId }) => ({
       id,
       title,
       titleRu,
       score,
       status,
       imageUrl,
+      source,
+      shikiId,
+      malId,
     }));
 }

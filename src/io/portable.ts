@@ -1,4 +1,5 @@
 import type { Contender, RankedContender } from "../domain";
+import { isShikiUserRatesExport, shikiUserRatesToPortable } from "./shikiUserRates";
 
 export const PORTABLE_FORMAT = "toplist-maker" as const;
 export const PORTABLE_VERSION = 1 as const;
@@ -54,8 +55,16 @@ export function buildRankingDocument(
 }
 
 export function parsePortable(raw: unknown): PortableDocument {
+  // Shikimori user-rates export is a bare JSON array
+  if (Array.isArray(raw)) {
+    if (isShikiUserRatesExport(raw)) {
+      return shikiUserRatesToPortable(raw);
+    }
+    throw new Error("Invalid file: JSON array is not a known list format");
+  }
+
   if (!raw || typeof raw !== "object") {
-    throw new Error("Invalid file: expected a JSON object");
+    throw new Error("Invalid file: expected a JSON object or Shikimori rates array");
   }
   const doc = raw as Record<string, unknown>;
 
@@ -64,8 +73,19 @@ export function parsePortable(raw: unknown): PortableDocument {
     return buildListDocument("Imported list", normalizeItems(doc.items), asMeta(doc.meta));
   }
 
+  // Wrapped Shikimori dump (rare): { animes: [...] } / { rates: [...] }
+  for (const key of ["animes", "rates", "user_rates", "list"] as const) {
+    const nested = doc[key];
+    if (Array.isArray(nested)) {
+      if (isShikiUserRatesExport(nested)) {
+        const name = typeof doc.name === "string" && doc.name.trim() ? doc.name.trim() : undefined;
+        return shikiUserRatesToPortable(nested, { name });
+      }
+    }
+  }
+
   if (doc.format !== PORTABLE_FORMAT) {
-    throw new Error(`Unknown format (expected ${PORTABLE_FORMAT})`);
+    throw new Error(`Unknown format (expected ${PORTABLE_FORMAT} or Shikimori user-rates export)`);
   }
   if (doc.version !== PORTABLE_VERSION) {
     throw new Error(`Unsupported version: ${String(doc.version)}`);

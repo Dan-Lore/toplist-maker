@@ -29,7 +29,7 @@ const fileInput = ref<HTMLInputElement | null>(null);
 onMounted(async () => {
   await session.refreshHistory();
   if (items.value.length === 0 && !loading.value) {
-    await session.loadSample();
+    await session.loadSample({ quiet: true });
   }
 });
 
@@ -88,8 +88,8 @@ function formatWhen(ts: number): string {
       <p class="eyebrow">Private MVP</p>
       <h1 class="brand">Toplist Maker</h1>
       <p class="lede">
-        Load a list (sample, file, or history), run pairwise duels, or open an already finished
-        ranking. Everything stays in this browser for now.
+        Load a list (sample, portable JSON, Shikimori export, or history), run pairwise duels, or
+        open an already finished ranking. Everything stays in this browser for now.
       </p>
     </header>
 

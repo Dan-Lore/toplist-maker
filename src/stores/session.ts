@@ -32,7 +32,7 @@ import {
 } from "../io/portable";
 import { enrichContendersWithPreviews, type PreviewProvider } from "../media/previews";
 
-const SAMPLE_URL = "/samples/shiki-completed-seed.json";
+const SAMPLE_URL = `${import.meta.env.BASE_URL}samples/shiki-completed-seed.json`;
 
 interface SeedFile {
   meta?: Record<string, unknown>;
@@ -180,21 +180,27 @@ export const useSessionStore = defineStore("session", () => {
     previewProvider.value = provider;
   }
 
-  async function loadSample(): Promise<void> {
+  async function loadSample(options?: { quiet?: boolean }): Promise<void> {
     loading.value = true;
     loadError.value = null;
     try {
       const res = await fetch(SAMPLE_URL);
       if (!res.ok) {
-        throw new Error(`Failed to load sample (${res.status})`);
+        throw new Error(`Sample list unavailable (${res.status})`);
       }
       const data = (await res.json()) as SeedFile;
       const selected = selectTopCompleted(data.items);
       await applyList("Shiki completed seed", selected, data.meta);
     } catch (err) {
-      loadError.value = err instanceof Error ? err.message : String(err);
       items.value = [];
       seedMeta.value = null;
+      sessionName.value = "Untitled list";
+      // First visit / auto-load: empty setup is fine — don't scare with a red banner.
+      if (!options?.quiet) {
+        loadError.value = err instanceof Error ? err.message : String(err);
+      } else {
+        console.warn("Sample list not loaded", err);
+      }
     } finally {
       loading.value = false;
     }
