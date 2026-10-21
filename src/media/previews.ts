@@ -2,9 +2,27 @@ import type { Contender, ContenderId } from "../domain";
 
 export type PreviewProvider = "auto" | "shiki" | "mal";
 
-const SHIKI_ORIGIN = "https://shikimori.one";
+/** Current Shikimori host (.one is blocked/unavailable in many networks). */
+export const SHIKI_ORIGIN = "https://shikimori.io";
+const SHIKI_LEGACY_HOSTS = ["shikimori.one", "nyaa.shikimori.one", "nyaa.shikimori.io"];
 const JIKAN_ORIGIN = "https://api.jikan.moe/v4";
 const USER_AGENT = "toplist-maker/0.1 (+https://github.com/Dan-Lore/toplist-maker)";
+
+/** Rewrite legacy Shiki hosts (.one / nyaa) to the current origin. */
+export function rewriteShikiUrl(url?: string | null): string | undefined {
+  if (!url) return undefined;
+  try {
+    const parsed = new URL(url);
+    if (SHIKI_LEGACY_HOSTS.includes(parsed.hostname) || parsed.hostname === "shikimori.io") {
+      parsed.protocol = "https:";
+      parsed.hostname = "shikimori.io";
+      return parsed.toString();
+    }
+  } catch {
+    return url;
+  }
+  return url;
+}
 
 /** In-memory cache so duel remounts don't re-hit APIs. */
 const resolvedCache = new Map<string, string>();
@@ -44,11 +62,14 @@ export function staticPreviewCandidates(
 ): string[] {
   const urls: string[] = [];
   const push = (url?: string): void => {
-    if (!url) return;
-    if (!urls.includes(url)) urls.push(url);
+    const next = rewriteShikiUrl(url) ?? url;
+    if (!next) return;
+    if (!urls.includes(next)) urls.push(next);
   };
 
   push(item.imageUrl);
+  // Prefer migrated host even when raw imageUrl still points at .one
+  push(rewriteShikiUrl(item.imageUrl));
 
   const shikiId = resolveShikiId(item);
   const malId = resolveMalId(item);
@@ -167,7 +188,7 @@ export async function resolvePreviewUrl(
 
   let malId = resolveMalId(item);
   let shikiId = resolveShikiId(item);
-  let imageUrl = item.imageUrl;
+  let imageUrl = rewriteShikiUrl(item.imageUrl) ?? item.imageUrl;
   let shikiFallback: string | undefined;
 
   const tryShiki = provider === "auto" || provider === "shiki";
@@ -242,7 +263,9 @@ export async function enrichContendersWithPreviews(
 
 function absoluteShikiUrl(path?: string | null): string | undefined {
   if (!path) return undefined;
-  if (path.startsWith("http://") || path.startsWith("https://")) return path;
+  if (path.startsWith("http://") || path.startsWith("https://")) {
+    return rewriteShikiUrl(path) ?? path;
+  }
   return `${SHIKI_ORIGIN}${path.startsWith("/") ? "" : "/"}${path}`;
 }
 

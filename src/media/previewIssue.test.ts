@@ -31,11 +31,11 @@ describe("diagnoseMissingPoster", () => {
       id: 20,
       title: "Naruto",
       source: "shiki",
-      imageUrl: "https://shikimori.one/system/animes/preview/20.jpg",
+      imageUrl: "https://shikimori.io/system/animes/preview/20.jpg",
     };
     const urls = [
-      "https://shikimori.one/system/animes/preview/20.jpg",
-      "https://shikimori.one/system/animes/original/20.jpg",
+      "https://shikimori.io/system/animes/preview/20.jpg",
+      "https://shikimori.io/system/animes/original/20.jpg",
     ];
     const issue = diagnoseMissingPoster({
       item,
@@ -44,8 +44,8 @@ describe("diagnoseMissingPoster", () => {
       failedUrls: urls,
     });
     expect(issue.code).toBe("cdn_all_failed");
-    expect(issue.message).toContain("shikimori.one");
+    expect(issue.message).toContain("shikimori.io");
     expect(issue.detail).toContain("tried=2");
-    expect(issue.detail).toContain("hosts=shikimori.one");
+    expect(issue.detail).toContain("hosts=shikimori.io");
   });
 });

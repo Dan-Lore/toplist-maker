@@ -46,11 +46,11 @@ vp build
 
 On setup, pick **Posters** provider and **Fetch posters**:
 
-| Provider  | Behavior                                                                       |
-| --------- | ------------------------------------------------------------------------------ |
-| Auto      | Shikimori CDN/GraphQL first; fill gaps via Jikan if `malId` is known           |
-| Shikimori | CDN preview/original + GraphQL/REST                                            |
-| MAL       | Jikan v4 images (`malId`, or discover via Shiki when only Shiki id is present) |
+| Provider  | Behavior                                                                              |
+| --------- | ------------------------------------------------------------------------------------- |
+| Auto      | Shikimori (`shikimori.io`) CDN/GraphQL first; fill gaps via Jikan if `malId` is known |
+| Shikimori | CDN preview/original + GraphQL/REST on `shikimori.io` (legacy `.one` URLs rewritten)  |
+| MAL       | Jikan v4 images (`malId`, or discover via Shiki when only Shiki id is present)        |
 
 Duel cards also try a static fallback chain (`imageUrl` → Shiki CDN) with `referrerpolicy="no-referrer"`.
 

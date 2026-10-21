@@ -125,3 +125,4 @@
 | 2026-10-21 | Локально: история списков/топов + JSON export/import (`list` / `ranking`); бэкенд — TODO                |
 | 2026-10-21 | Превью: Shikimori CDN/API + MAL через Jikan (`src/media/previews.ts`), fallback в карточке              |
 | 2026-10-21 | Тултип на пустом постере: понятный текст + `code=` (`previewIssue.ts`)                                  |
+| 2026-10-21 | Shikimori host: `shikimori.io` (`.one` недоступен / РКН); legacy URL переписываются                     |
